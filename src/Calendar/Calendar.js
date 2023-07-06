@@ -34,7 +34,7 @@ const Calendar = () => {
             let exists = false;
             for (let i = 0; i < calendarRef.current.control.events.list.length; i++) {
                 let eventId = calendarRef.current.control.events.list[i].id
-                if (data[0]['appointments'][v]['id'] == eventId) {
+                if (data[0]['appointments'][v]['id'] === eventId) {
                     exists = true;
                 }
             }
