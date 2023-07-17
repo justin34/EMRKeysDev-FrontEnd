@@ -1,5 +1,6 @@
 import {DayPilot, DayPilotCalendar, DayPilotNavigator} from "@daypilot/daypilot-lite-react";
 import React, {useRef, useState, useEffect} from "react";
+import {useParams} from "react-router-dom";
 import axios from "axios";
 
 const styles = {
@@ -19,31 +20,33 @@ const styles = {
 
 const Calendar = () => {
     let data;
+    const params = useParams();
+    const userId = params.userId
     const [dictionary, setDictionary] = useState({
         details: []
 
     })
     const [user, setUser] = useState(0)
-    axios.get('http://localhost:8000').then(res => {
+    axios.get('http://localhost:8000/users/' + userId + '/appointments').then(res => {
         data = res.data;
         setDictionary({
             details: data
         })
-        for(let v = 0;v < data[0]['appointments'].length; v++)
+        for(let v = 0;v < data.length; v++)
         {
             let exists = false;
             for (let i = 0; i < calendarRef.current.control.events.list.length; i++) {
                 let eventId = calendarRef.current.control.events.list[i].id
-                if (data[0]['appointments'][v]['id'] === eventId) {
+                if (data[v]['id'] === eventId) {
                     exists = true;
                 }
             }
             if (!exists) {
                 calendarRef.current.control.events.add({
-                    start: data[0]['appointments'][v]["start"],
-                    end: data[0]['appointments'][v]["end"],
-                    id: data[0]['appointments'][v]["id"],
-                    text: data[0]['appointments'][v]["title"]
+                    start: data[v]["start"],
+                    end: data[v]["end"],
+                    id: data[v]["id"],
+                    text: data[v]["title"]
                 });
             }
         }

@@ -11,7 +11,7 @@ const SideBar = () => {
             padding: 0
         }}>
 
-                    <a className="navbar-brand" href="#">
+                    <a className="navbar-brand" href={window.location.pathname + "/patients"}>
                         <img src={StockImg} alt="stuff" width="100" height="100"/>
                         <p>Patient list</p>
                     </a>
