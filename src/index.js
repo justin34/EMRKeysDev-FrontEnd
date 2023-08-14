@@ -4,6 +4,7 @@ import './index.css';
 import App from './HomePage/App';
 import Login from './LoginScreen/Login'
 import PatientList from "./PatientList/Patients";
+import PatientForm from "./PatientList/PatientForm";
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 import reportWebVitals from './reportWebVitals';
 
@@ -15,6 +16,7 @@ root.render(
               <Route path="*" element={<Login />}/>
               <Route path="/home/:userId" element={<App />}/>
               <Route path="/home/:userId/patients" element={<PatientList />}/>
+              <Route path="/patients/:userId/:patientId/" element={<PatientForm/>}/>
           </Routes>
       </BrowserRouter>
   </React.StrictMode>

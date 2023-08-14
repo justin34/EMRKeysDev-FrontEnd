@@ -15,7 +15,7 @@ const Login = () => {
             let found = false;
             for(let i = 0; i < users.length; i++ ){
 
-                if(values['username'] == users[i]['username'] && values['password'] == users[i]['password']) {
+                if((values['username'] == users[i]['username'] || values['username'] == users[i]['email']) && values['password'] == users[i]['password']) {
                     navigate("/home/" + users[i]['id'], {replace: true});
                     found = true;
 
@@ -55,7 +55,7 @@ const Login = () => {
         autoComplete="off"
     >
         <Form.Item
-            label="Username"
+            label="Username/Email"
             name="username"
             rules={[
                 {

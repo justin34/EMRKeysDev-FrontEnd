@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {useParams} from "react-router-dom";
 import axios from "axios";
 
+// This is the implementation for the list patients page
 
 const positionOptions = ['top', 'bottom', 'both'];
 const alignOptions = ['start', 'center', 'end'];
@@ -14,22 +15,19 @@ const PatientList = () => {
     const params = useParams();
     const userId = params.userId;
 
+    // gets data from the backend and updates the data list
     axios.get("http://localhost:8000/users/" + userId + "/patients").then(res => {
         let patients = res.data;
         for(let i = 0; i < patients.length; i++){
             let added = false;
             for(let v = 0; v < data.length; v++){
 
-                if(data[v].id == patients[i]["id"]){
+                if(data[v].id === patients[i]["id"]){
                     added = true;
                 }
             }
-            if(!added) setData(prevState => [...prevState, {
-                id: patients[i]["id"],
-                name: patients[i]["name"],
-                DOB: patients[i]["DOB"],
-                notes: patients[i]["notes"]
-            }]);
+            if(!added) {
+                setData(patients)}
         }
     })
 
@@ -38,7 +36,6 @@ const PatientList = () => {
     return (
         <>
 
-            <p>{JSON.stringify(data)}</p>
             <List
                 pagination={{
                     position,
@@ -49,10 +46,10 @@ const PatientList = () => {
                     <List.Item>
                         <List.Item.Meta
                             avatar={
-                                <Avatar src={`https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFyCHt4JOh--j6glcSf2pVsy884mnPwm1Qz6NkBdgiCmHO46jwp7kxCJO9viYZ2ZvRelw&usqp=CAU`} />
+                                <Avatar src={"http://localhost:8000" + item.profile_picture} />
                             }
-                            title={<a href="#">{item.name}</a>}
-                            description={"Date of birth: "+item.DOB+ "Note: " + item.notes}
+                            title={<a href={"/patients/" + userId + "/" + item.id}>{item.name}</a>}
+                            description={"Date of birth: "+item.DOB+ " Note: " + item.notes}
                         />
                     </List.Item>
                 )}
