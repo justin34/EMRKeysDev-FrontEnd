@@ -8,11 +8,11 @@ import axios from "axios";
 const positionOptions = ['top', 'bottom', 'both'];
 const alignOptions = ['start', 'center', 'end'];
 const PatientList = () => {
-    const [data, setData] =  useState([
+    const [data, setData] =  useState([  // this is a state that holds the patient data
 
 
     ]);
-    const params = useParams();
+    const params = useParams(); // this holds all the url paramaters as defined in index.js
     const userId = params.userId;
 
     // gets data from the backend and updates the data list
@@ -20,7 +20,7 @@ const PatientList = () => {
         let patients = res.data;
         for(let i = 0; i < patients.length; i++){
             let added = false;
-            for(let v = 0; v < data.length; v++){
+            for(let v = 0; v < data.length; v++){ // makes sure to not add duplicate data
 
                 if(data[v].id === patients[i]["id"]){
                     added = true;
@@ -31,8 +31,8 @@ const PatientList = () => {
         }
     })
 
-    const [position, setPosition] = useState('bottom');
-    const [align, setAlign] = useState('center');
+    const [position, setPosition] = useState('bottom'); // state for the position of the list
+    const [align, setAlign] = useState('center'); // state for alignment
     return (
         <>
 
@@ -41,7 +41,7 @@ const PatientList = () => {
                     position,
                     align,
                 }}
-                dataSource={data}
+                dataSource={data} // every patient has a profile_picture, id, name, DOB, snd notes param
                 renderItem={(item, index) => (
                     <List.Item>
                         <List.Item.Meta

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import {useParams} from "react-router-dom";
-import {Select, Slider, Button} from "antd";
+import {Select, Slider, Button, Cascader} from "antd";
 import axios from "axios";
 
 const Diagnosis = ({ updateText }) => {
 
-    const options = [{label:"Aggression", value: "Aggression"}, {label:"Agitation", value: "Agitation"},
-                                              {label:"Anger", value: "Anger"}, {label:"Anxiety", value: "Anxiety"}];
+    const [options, setOptions] = useState([]);
 
     const [dataMap, setDataMap] = useState([])
 
@@ -17,7 +16,37 @@ const Diagnosis = ({ updateText }) => {
     const patientId = useParams().patientId
 
 
+    const updateOptions = () => {
+        axios.get("http://localhost:8000/symptomList/").then(res => {
+            setOptions([])
+            console.log(res.data)
+            for (let i = 0; i < res.data.length; i++){
+                setOptions(options => [...options, {
+                    value: res.data[i],
+                    label: res.data[i].charAt(0).toUpperCase() + res.data[i].slice(1),
+                    children:[
+                        {
+                            value: "mild",
+                            label: "Mild"
+                        },
+                        {
+                            value: "moderate",
+                            label: "Moderate"
+                        },
+                        {
+                            value: "moderate to severe",
+                            label: "Moderate to Severe"
+                        },
+                        {
+                            value: "severe",
+                            label: "Severe"
+                        }
+                    ]
+                }])
 
+            }
+        })
+    }
 
     const marks = {
         0: "None",
@@ -31,59 +60,31 @@ const Diagnosis = ({ updateText }) => {
         let temp = symptoms
         if(temp.length <= i){
             temp = [...symptoms, {
-                symptom: value,
-                severity: 0
+                symptom: value[0],
+                severity: value[1]
             }]
             setSymptoms(temp)
             return;
         }
 
-        temp[i].symptom = value
+        temp[i].symptom = value[0]
+        temp[i].severity = value[1]
         setSymptoms(temp)
+
+
     };
 
     const requestNote = () => {
-        const tempformatedSymptoms = symptoms;
-        const lisToRem = []
 
-        for (let i = 0; i < tempformatedSymptoms.length; i++){
-            switch (symptoms[i].severity){
-                case 0:
-                    lisToRem.push(i);
-                    break;
-                case 25:
-                    tempformatedSymptoms[i].severity = "mild";
-                    break;
-                case 50:
-                    tempformatedSymptoms[i].severity = "moderate";
-                    break;
-                case 75:
-                    tempformatedSymptoms[i].severity = "moderate to severe";
-                    break;
-                case 100:
-                    tempformatedSymptoms[i].severity = "severe";
-                    break;
-                default:
-                    lisToRem.push(i)
+        let formatedSymptoms = { "symptoms": symptoms}
 
-            }
-
-            for(let i = 0; lisToRem.length; i++){
-                tempformatedSymptoms.splice(lisToRem[i], 1)
-            }
-
-
-             let formatedSymptoms = { "symptoms": tempformatedSymptoms}
-
-            updateAndPost(formatedSymptoms)
-
-        }
+        updateAndPost(formatedSymptoms)
 
 
     }
 
     const updateAndPost = (data) => {
-
+        console.log(data)
         axios({
             method:"post",
             url: "http://localhost:8000/ainotes/" + patientId,
@@ -94,7 +95,9 @@ const Diagnosis = ({ updateText }) => {
             axios.get("http://localhost:8000/ainotes/" + patientId).then(res => {
                 console.log(res.data)
 
-                updateText(res.data[0]["note"])
+                const text = "<strong>Presenting symptoms:</strong><br>" + res.data[res.data.length-1]["note"]
+
+                updateText(text)
 
             })
         }).catch(function (res){
@@ -104,23 +107,12 @@ const Diagnosis = ({ updateText }) => {
 
     }
 
-    const handleSevaSelect = (value, i) => {
-      const temp = symptoms;
-      if(temp.length <= i) {
-          alert("You must select a symptom first")
-          return;
-      }
-      temp[i].severity = value;
-      setSymptoms(temp);
-
-      console.log(JSON.stringify(symptoms))
-    }
-
     const handleAdd = () =>{
         const dataList = [...dataMap, []]
         if(dataList.length === 1)
             updateText("<u><strong><h2>Psych Assessment</h2></strong></u>")
         setDataMap(dataList)
+        updateOptions()
     }
 
     return(
@@ -128,16 +120,16 @@ const Diagnosis = ({ updateText }) => {
         {dataMap.map((data, i) => {
             return(
                 <div key={i}>
-                <Select
-                    mode="single"
-                    allowClear
-                    showSearch={true}
-                    style={{ width: '100%' }}
-                    placeholder="Please select"
-                    onChange={symp => handleSympSelect(symp, i)}
-                    options={options}
-                />
-                <Slider marks={marks} step={null} defaultValue={0} onChange={(value) => handleSevaSelect(value, i)} />
+                    <Cascader
+                        expandTrigger={"hover"}
+                        options={options}
+                        showSearch={true}
+                        style={{ width: '100%' }}
+                        placeholder="Please select"
+                        onChange={symp => handleSympSelect(symp, i)}
+
+                    />
+
                 </div>
         )
 

@@ -1,8 +1,9 @@
-import React, { useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useParams} from "react-router-dom";
 import axios from "axios";
 import './PatientForm.css'
 import Diagnosis from './Tabs/Diagnosis';
+import PsycAssessment from './Tabs/PsycAssessment';
 import {Tabs, Card, Layout, Button, Input, DatePicker} from 'antd';
 import { UploadOutlined, UserOutlined } from '@ant-design/icons';
 import ReactQuill from 'react-quill';
@@ -11,42 +12,66 @@ import dayjs from "dayjs";
 
 const { Header, Content, Footer, Sider } = Layout;
 
-
+// this is the implementation for the patient form/edit page
 const PatientForm = () =>{
-    const [patientData, setPatientData] =  useState({
-        "id": 1,
+    const [patientData, setPatientData] =  useState({ // state for patient data with some sample data
+        "id": -1,
         "name": "Jane Doe",
         "DOB": "1999-09-09",
         "notes": "This is the note",
         "profile_picture": "/media/profilePictures/DefaultProfilePic.png"
     });
-    const [editPacient, setEditPacient] = useState(true)
-    const params = useParams()
+
+    const [editPacient, setEditPacient] = useState(true) // bool to know if we are editing patient name and DOB
+    const params = useParams() // params stored in url defined in index.js
     const patientId = params.patientId
     const userId =  params.userId
 
-    const [editorValue, setEditorValue] = useState('');
-    const [doUpdateNote, setDoUpdateNote] = useState(true)
 
 
-    const [profilePicture, setProfilePicture] = useState();
-    const [pacientName, setPacientName] = useState("");
+
+    const [editorValue, setEditorValue] = useState('') // store the text editor value
+    const [doUpdateNote, setDoUpdateNote] = useState(false) // bool to know if we want to update the note
+
+
+    const [profilePicture, setProfilePicture] = useState(patientData.profile_picture);
+    const [pacientName, setPacientName] = useState();
     const [DOB, setDOB] = useState();
+    useEffect(() => {
+        axios.get("http://localhost:8000/patients/" + patientId).then(res => {
+
+            const patient = res.data;
+            if(patient.id !== patientData.id){
+                setPatientData(patient);
+                setEditorValue(patient.notes)
+                setDoUpdateNote(true)
+                setProfilePicture(patient.profile_picture)
+                setDOB(dayjs(patient.DOB, "YYYY-MM-DD"))
+                setPacientName(patient.name)
+            }
+            console.log("UPDATING")
+
+        })
+
+    }, [])
 
 
-
-    function UpdateNote({ children }){
-        if(!doUpdateNote)
+    function UpdateNote({ children }){ // updates the note by cloning the editor and replacing it with a new editor with the updated text
+        if(!doUpdateNote) // if you dont have this the editor will constantly get cloned and you wont be able to type in the editor
             return children
         let childWithProps = React.cloneElement(children, {
                 value: editorValue
             })
         setDoUpdateNote(false)
 
+        updatePatientData()
+
+
+
         return childWithProps
     }
 
-    function addTextToNote(text, replace=false)  {
+    function addTextToNote(text, replace=false)  { // replaces text in editor or adds to it
         if(replace)
             setEditorValue(text);
         else
@@ -55,57 +80,63 @@ const PatientForm = () =>{
 
     }
 
-    const toggleEditPacient = () => {
+    const toggleEditPacient = () => { // toggles whether wh are on the patient edit screen
 
         setEditPacient(!editPacient);
 
         if(!editPacient){
 
-            if(!pacientName)
-                setPacientName(patientData.name);
-            if(profilePicture === null)
-                return;
-            if(!(DOB instanceof dayjs))
-                setDOB(dayjs(patientData.DOB, "YYYY-MM-DD"));
-
-            const newPatientData = new FormData();
-
-            setEditorValue(editorValue + "<strong>Editing</strong>")
-            setDoUpdateNote(true)
-
-            newPatientData.append('name', pacientName);
-            newPatientData.append('DOB', dayjs(DOB).format('YYYY-MM-DD'));
-            //newPatientData.append('profile_picture', profilePicture,  profilePicture.name);
-            console.log(newPatientData)
-
-            axios({
-                method:"post",
-                url: "http://localhost:8000/patients/" + patientId,
-                data: newPatientData,
-                headers: {"Content-Type": "multipart/form-data"}
-            }).then(function (res){
-                console.log(res);
-            }).catch(function (res){
-                console.log(res);
-            })
-            setPacientName(patientData.name);
-            setDOB(dayjs(patientData.DOB, "YYYY-MM-DD"));
+            updatePatientData(pacientName, DOB)
 
 
         }
+    }
+
+    const updatePatientData = () => { // after we edit we update patient data
+        if(!pacientName)
+            setPacientName(patientData.name);
+        if(profilePicture === null)
+
+            return;
+        if(!(DOB instanceof dayjs))
+            setDOB(dayjs(patientData.DOB, "YYYY-MM-DD"))
+
+        const newPatientData = new FormData();
+
+
+        newPatientData.append('name', pacientName);
+        newPatientData.append('DOB', dayjs(DOB).format('YYYY-MM-DD'));
+        newPatientData.append("notes", editorValue)
+        newPatientData.append('profile_picture', profilePicture);
+        console.log(newPatientData)
+
+        axios({
+            method:"post",
+            url: "http://localhost:8000/patients/" + patientId,
+            data: newPatientData,
+            headers: {"Content-Type": "multipart/form-data"}
+        }).then(function (res){
+            axios.get("http://localhost:8000/patients/" + patientId).then(res => {
+
+                const patient = res.data;
+                if(patient.id !== patientData.id){
+                    setPatientData(patient);
+                    setEditorValue(patient.notes)
+                    setDoUpdateNote(true)
+                }
+
+            })
+        }).catch(function (res){
+            console.log(res);
+        })
+
     }
 
     const setDate = (date, dateString) => {
         setDOB(dateString);
     }
 
-    axios.get("http://localhost:8000/patients/" + patientId).then(res => {
 
-            let patient = res.data;
-            if(patient.id != patientData.id)
-                setPatientData(patient);
-
-    })
 
 
 
@@ -160,10 +191,9 @@ const PatientForm = () =>{
                     >
                     <Tabs type={"card"}
                         items={[{
-                            label: "Current Symptoms",
+                            label: "Psyc Assessment",
                             key: 1,
-                            children: <Diagnosis updateText={addTextToNote}/>,
-
+                            children: <PsycAssessment updateText={ addTextToNote }/>,
                         },
                         ]
                     }
@@ -178,14 +208,13 @@ const PatientForm = () =>{
                         doUpdateNote?<UpdateNote>
                             <ReactQuill
                                 value={editorValue}
-                                onChange={(value) => {setEditorValue(value);
-                                    console.log(editorValue);}}
+                                onChange={(value) => {setEditorValue(value);}}
                                 style={{width : "500px",
                                     height: "90%"}}
                             /></UpdateNote>:<ReactQuill
                             value={editorValue}
                             onChange={(value) => {setEditorValue(value);
-                                console.log(editorValue);}}
+                                updatePatientData()}}
                             style={{width : "500px",
                                 height: "90%"}}
                         />
