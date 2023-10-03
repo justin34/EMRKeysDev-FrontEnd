@@ -48,14 +48,6 @@ const Diagnosis = ({ updateText }) => {
         })
     }
 
-    const marks = {
-        0: "None",
-        25: "Mild",
-        50: "Moderate",
-        75: "Moderate to Severe",
-        100: "Severe",
-    }
-
     const handleSympSelect = (value, i) => {
         let temp = symptoms
         if(temp.length <= i){

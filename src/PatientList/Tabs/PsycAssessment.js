@@ -21,7 +21,7 @@ const PsycAssessment = ({ updateText }) => {
               },{
                   label: "MedicalHis",
                   key: 2,
-                  children: <MedicalHis/>,
+                  children: <MedicalHis updateText={ updateText }/>,
               }
               ]}
 
